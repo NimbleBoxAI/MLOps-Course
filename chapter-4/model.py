@@ -5,7 +5,12 @@
 from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
 import torch
 
+from helpers import create_logger
+
+logger = create_logger(project_name="qa_model", level="INFO", json_logging=True)
+
 model_name = "deepset/roberta-base-squad2"
+logger.info(f"Loading model: {model_name}")
 model = AutoModelForQuestionAnswering.from_pretrained(model_name)
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
@@ -39,6 +44,9 @@ def get_answer(question: str, context: str) -> str:
     Returns:
         str: Answer from the context.
     """
+    logger.info(f"Received question: {question}")
+    logger.info(f"Received context: {context}")
+
     encoding = tokenizer.encode_plus(question, context)
     input_ids, attention_mask = encoding["input_ids"], encoding["attention_mask"]
 
@@ -47,6 +55,7 @@ def get_answer(question: str, context: str) -> str:
     ans_tokens = input_ids[torch.argmax(output['start_logits']) : torch.argmax(output['end_logits']) + 1]
     answer_tokens = tokenizer.convert_ids_to_tokens(ans_tokens , skip_special_tokens=True)
     answer = tokenizer.convert_tokens_to_string(answer_tokens)
+    logger.info(f"Predicted answer: {answer}")
     return answer
 
 

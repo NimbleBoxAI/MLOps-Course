@@ -1,2 +1,5 @@
-transformers
-torch
+transformers==4.16
+torch==1.10
+python-json-logger==2.0.2
+pytz
+rich==11.2

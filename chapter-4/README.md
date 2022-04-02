@@ -37,8 +37,12 @@ pip install -r requirements.txt
 ## Running
 
 ```python
-python model.py
+python src/basic_model.py
 ```
+
+This will download the model `deepset/roberta-base-squad2` from huggingface.
+
+![](../images/chapter-4/basic_flow.png)
 
 # Docker
 
@@ -70,7 +74,7 @@ WORKDIR /app
 RUN pip install -r requirements.txt
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
-CMD ["python3", "model.py"]
+CMD ["python3", "src/model.py"]
 ```
 
 - `FROM:` creates a layer from the base image, here we have used python:3.8 as base image. This is pulled from Docker Hub. 
@@ -136,4 +140,68 @@ List all the docker containers using the command
 docker ps -a
 ```
 
-The model is downloaded while running the container. We will explore how to load from a remote location in next chapter.
+![](../images/chapter-4/docker_flow.png)
+
+The model is downloaded while running the container. We will explore how to upload & download from a remote storage (s3) instead of downloading it in docker image.
+
+# Remote Storage
+
+Remote storage, also known as cloud storage, is a description of storage accessed over a network (remotely). It can help in deploying large amounts of data to other servers that are located in the same remote zone.
+
+## S3
+
+Amazon Simple Storage Service (S3) is a storage for the internet. It is designed for large-capacity, low-cost storage provision across multiple geographical regions.
+
+
+We have the model in our cache dir `TRANSFORMERS_CACHE`. The default directory where the model is downloaded is `~/.cache/huggingface/transformers/`. One simple way is to package the model in dockerimage so that it won't be downloaded everytime. But this is not a standard approach. There could be multiple models and we cannot package each and every model. Also we should not download from huggingface repo everytime. Better solution to this is to maintain all the models in a remote storage and load the model from 
+there as and when needed.
+
+For this to happen, we need to first upload the models to remote storage (S3).
+
+![](../images/chapter-4/remote_flow.png)
+
+## Uploading model to S3
+
+Let's save the models in a specific folder `models`.
+
+```
+python src/save_model.py
+```
+
+This will download the model from huggingface. If the model is already downloaded it will be present in cache directory `~/.cache/huggingface/transformers/`. Then it will save the model in `models` directory.
+
+Now we need to save this model in S3.
+
+#### Accessing s3 using CLI
+
+Download the AWS CLI package and [install it from here](https://aws.amazon.com/cli/)
+
+aws cli comes with a lot of commands. [Check the documentation here](https://docs.aws.amazon.com/cli/latest/index.html)
+
+
+#### Push the model to s3
+
+```
+aws cp deepset s3://mlops-course/models/ --recursive
+```
+
+## Downloading model from S3
+
+Now that the model is present in s3, we need to modify the code such that the model is downloaded from s3 instead of huggingface.
+
+
+
+## Dockerfile Update
+
+# Conainer Registry
+
+A container registry is a place to store docker images. Docker image is a file comprised of multiple layers which can execute applications in a single instance. Hosting all the images in one stored location allows users to commit, identify and pull images when needed.
+
+AWS version of container registry is ECR which stands for Elastic Container Registry.
+
+![arch](../images/chapter-4/ecr.png)
+
+## Uploading Docker Image to ECR
+
+
+Now that the docker image is updated with the code and pushed to ECR, we need to create container with that image. There are different ways of doing it. We will explore deploying methods like with Kubernetes (EKS), Serverless (Lambda) in the next chapter.

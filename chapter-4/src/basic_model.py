@@ -2,7 +2,7 @@
 
 """
 
-from transformers import AutoModelForQuestionAnswering, AutoTokenizer, pipeline
+from transformers import AutoModelForQuestionAnswering, AutoTokenizer
 import torch
 
 from helpers import create_logger
@@ -13,25 +13,6 @@ model_name = "deepset/roberta-base-squad2"
 logger.info(f"Loading model: {model_name}")
 model = AutoModelForQuestionAnswering.from_pretrained(model_name)
 tokenizer = AutoTokenizer.from_pretrained(model_name)
-
-
-def get_answer_using_pipeline(question: str, context: str) -> str:
-    """Retrieves the answer for the question from the context provided using huggingface pipeline
-
-    Args:
-        question (str): String indicating the question.
-        context (str): String indicating the context
-
-    Returns:
-        str: Answer from the context.
-    """
-    nlp = pipeline('question-answering', model=model_name, tokenizer=model_name)
-    QA_input = {
-        'question': 'Why is model conversion important?',
-        'context': 'The option to convert models between FARM and transformers gives freedom to the user and let people easily switch between frameworks.'
-    }
-    answer = nlp(QA_input)
-    return answer
 
 
 def get_answer(question: str, context: str) -> str:

@@ -2,12 +2,14 @@ import datetime
 import logging
 import ntpath
 import os
+import shutil
 from typing import Optional
 
 from pythonjsonlogger import jsonlogger
 from pytz import timezone, utc
 from rich.logging import RichHandler
 
+from cloudpathlib import CloudPath
 
 def create_folder(directory):
     if not os.path.exists(directory):
@@ -130,3 +132,59 @@ def create_logger(
     logger.propagate = False
 
     return logger
+
+
+logger = create_logger(project_name="download_model", level="INFO", json_logging=True)
+
+
+def download_s3_folder(bucket_name: str, model_name: str, local_dir: str) -> None:
+    """
+    Download the contents of a folder directory
+    Args:
+        bucket_name: the name of the s3 bucket
+        s3_folder: the folder path in the s3 bucket
+        local_dir: directory path in the local file system
+    """
+    uri = f"s3://{bucket_name}/{model_name}"
+    cp = CloudPath(uri)
+    logger.info(f"Downloading...")
+    cp.download_to(local_dir)
+    logger.info("Download complete!")
+
+
+
+def download_model_from_s3(
+    model_name: str,
+    download_folder: str = "./models",
+    s3_bucket: str = "mlops-cousre/models",
+) -> str:
+    """Downloads model from s3 bucket based on given arguments and saves in default download folder
+    Args:
+        model_name (str): Name of model to be loaded
+        pipeline_name (str): Pipeline name like sentiment, absa, etc
+        download_folder (str)(Optional): Path where model will be downloaded
+        version (str)(Optional): Version of model if any
+    Return:
+        str: Path where model is downloaded
+    """
+
+    model_path = f"{download_folder}/{model_name}"
+    os.makedirs(model_path, exist_ok=True)
+
+    ## If the folder already contains model files return model_path
+    if os.listdir(model_path):
+        logger.info(f"Model already exists at {model_path} skipping the downloading...")
+        return model_path
+
+    shutil.rmtree(model_path)
+
+    remote_directory = f"s3://{s3_bucket}/{model_name}"
+
+    logger.info(f"Downloading the model from: {remote_directory} to {model_path}")
+    download_s3_folder(
+        s3_bucket,
+        model_name=model_name,
+        local_dir=model_path,
+    )
+
+    return model_path

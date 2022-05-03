@@ -134,9 +134,6 @@ def create_logger(
     return logger
 
 
-logger = create_logger(project_name="download_model", level="INFO", json_logging=True)
-
-
 def download_s3_folder(bucket_name: str, model_name: str, local_dir: str) -> None:
     """
     Download the contents of a folder directory
@@ -145,6 +142,7 @@ def download_s3_folder(bucket_name: str, model_name: str, local_dir: str) -> Non
         s3_folder: the folder path in the s3 bucket
         local_dir: directory path in the local file system
     """
+    logger = create_logger(project_name="download_model", level="INFO", json_logging=True)
     uri = f"s3://{bucket_name}/{model_name}"
     cp = CloudPath(uri)
     logger.info(f"Downloading...")
@@ -156,18 +154,17 @@ def download_s3_folder(bucket_name: str, model_name: str, local_dir: str) -> Non
 def download_model_from_s3(
     model_name: str,
     download_folder: str = "./models",
-    s3_bucket: str = "mlops-cousre/models",
+    s3_bucket: str = "mlops-course/models",
 ) -> str:
     """Downloads model from s3 bucket based on given arguments and saves in default download folder
     Args:
         model_name (str): Name of model to be loaded
-        pipeline_name (str): Pipeline name like sentiment, absa, etc
         download_folder (str)(Optional): Path where model will be downloaded
-        version (str)(Optional): Version of model if any
+        s3_bucket (str)(Optional): S3 bucket name where the model is present. Defaults to mlops-course/models
     Return:
         str: Path where model is downloaded
     """
-
+    logger = create_logger(project_name="download_model", level="INFO", json_logging=True)
     model_path = f"{download_folder}/{model_name}"
     os.makedirs(model_path, exist_ok=True)
 

@@ -4,15 +4,22 @@
 
 from transformers import AutoModelForQuestionAnswering, AutoTokenizer
 import torch
+import os
 
-from helpers import create_logger
+from helpers import create_logger, download_model_from_s3
 
 logger = create_logger(project_name="qa_model", level="INFO", json_logging=True)
 
 model_name = "deepset/roberta-base-squad2"
-logger.info(f"Loading model: {model_name}")
-model = AutoModelForQuestionAnswering.from_pretrained(model_name)
-tokenizer = AutoTokenizer.from_pretrained(model_name)
+root_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
+model_dir = os.path.join(root_dir, 'models')
+save_path = os.path.join(model_dir, model_name)
+
+# downloading model from s3
+model_path = download_model_from_s3(model_name=model_name, download_folder=save_path)
+
+model = AutoModelForQuestionAnswering.from_pretrained(model_path)
+tokenizer = AutoTokenizer.from_pretrained(model_path)
 
 
 def get_answer(question: str, context: str) -> str:

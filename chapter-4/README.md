@@ -37,7 +37,7 @@ pip install -r requirements.txt
 ## Running
 
 ```python
-python src/basic_model.py
+python src/model.py
 ```
 
 This will download the model `deepset/roberta-base-squad2` from huggingface.
@@ -96,7 +96,7 @@ Docker image is a file comprised of multiple layers which can execute applicatio
 Here instructions are provided in dockerfile. Let's create docker image using dockerfile. Run the following command:
 
 ```
-docker build -t qa:test .
+docker build -t qa:test -f dockerfiles/Dockerfile .
 ```
 
 The above command builds the docker image using Dockerfile and assigns a tag to the created image `qa:test`
@@ -172,6 +172,43 @@ This will download the model from huggingface. If the model is already downloade
 
 Now we need to save this model in S3.
 
+Data in S3 is organized in the form of buckets.
+
+- A Bucket is a logical unit of storage in S3.
+
+- A Bucket contains objects which contain the data and metadata.
+
+Before adding any data in S3 the user has to create a bucket which will be used to store objects.
+
+#### Creating bucket
+
+- Sign in to the AWS Management Console and open the Amazon S3 console at https://console.aws.amazon.com/s3/
+
+- Click on `Create Bucket`
+
+- Bucket name details
+
+- Created bucket
+
+#### Programmatic access
+
+Credentials are required to access any aws service. There are different ways of configuring credentials. Let's look at a simple way.
+
+- Go to My Security Credentials
+
+- Navigate to `Access Keys` section and click on `Create New Access Key button`.
+
+  - This will download a csv file containing the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
+
+- Set the ACCESS key and id values in environment variables.
+
+```
+export AWS_ACCESS_KEY_ID=<ACCESS KEY ID>
+export AWS_SECRET_ACCESS_KEY=<ACCESS SECRET>
+```
+
+**Do not share the secrets with others**
+
 #### Accessing s3 using CLI
 
 Download the AWS CLI package and [install it from here](https://aws.amazon.com/cli/)
@@ -181,9 +218,13 @@ aws cli comes with a lot of commands. [Check the documentation here](https://doc
 
 #### Push the model to s3
 
+Navigate to the models directory where the model is downloaded and then run the following script. 
+
 ```
 aws cp deepset s3://mlops-course/models/ --recursive
 ```
+
+Here `deepset` is the folder name, `--recursive` option for pushing all the files in a folder.
 
 ## Downloading model from S3
 
@@ -192,6 +233,33 @@ Now that the model is present in s3, we need to modify the code such that the mo
 
 
 ## Dockerfile Update
+
+```
+FROM python:3.8
+COPY ./ /app
+WORKDIR /app
+RUN pip install -r requirements.txt
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
+ARG MODEL_DIR=./models
+RUN chmod -R 0777 $MODEL_DIR
+RUN python3 src/improved_model.py
+```
+
+The change from prior dockerfile is:
+
+- `ARG MODEL_DIR=./models`: This is for saying where the models will be stored
+
+- `RUN chmod -R 0777 $MODEL_DIR`: This is for giving permissions to the models directory. So that at run time models can be downloaded and written to this directory.
+
+- `RUN python3 src/improved_model.py`: This will check whether the model is downloading from s3 properly or not.
+
+
+### Building DockerImage
+
+```
+docker build -t qa:test -f dockerfiles/improved.Dockerfile .
+```
 
 # Conainer Registry
 
@@ -203,5 +271,28 @@ AWS version of container registry is ECR which stands for Elastic Container Regi
 
 ## Uploading Docker Image to ECR
 
+- Create a repository when prompted with name `mlops-course`
 
-Now that the docker image is updated with the code and pushed to ECR, we need to create container with that image. There are different ways of doing it. We will explore deploying methods like with Kubernetes (EKS), Serverless (Lambda) in the next chapter.
+Commands required to push the image to ECR can be found in the ECR itself
+
+- Authenticating docker client to ECR
+
+```
+aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 246113150184.dkr.ecr.us-west-2.amazonaws.com
+```
+
+- Tagging the image
+
+```
+docker tag qa:test 246113150184.dkr.ecr.us-west-2.amazonaws.com/mlops-course:latest
+```
+
+- Pushing the image
+
+```
+docker push 246113150184.dkr.ecr.us-west-2.amazonaws.com/mlops-course:latest
+```
+
+
+
+Now that the docker image is updated with the code and pushed to ECR, we need to create container with that image. There are different ways of doing it. We will explore deploying methods like with Kubernetes (EKS), Serverless (Lambda) in the coming chapters. We will also look into how to configure CI/CD using GitHub Actions for automating the docker image building and pushing to ECR. 

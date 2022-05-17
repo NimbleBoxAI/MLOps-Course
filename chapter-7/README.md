@@ -79,3 +79,18 @@ Let's understand what's happening here:
 
 - List files in the repository step contains the `action` to list the contents of the repository.
 
+Commit & Push the file. Let's see how does it look in github.
+
+On GitHub, navigate to the main page of the repository.
+
+- Under your repository name, click Actions.
+
+![cicd](../images/chapter-7/cicd_1.png)
+
+- In the left sidebar, you can see the workflows.
+
+![cicd](../images/chapter-7/cicd_2.png)
+
+- Select the latest run & job of the required workflow.
+
+![cicd](../images/chapter-7/cicd_3.png)

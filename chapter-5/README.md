@@ -85,12 +85,12 @@ On GitHub, navigate to the main page of the repository.
 
 - Under your repository name, click Actions.
 
-![cicd](../images/chapter-7/cicd_1.png)
+![cicd](../images/chapter-5/cicd_1.png)
 
 - In the left sidebar, you can see the workflows.
 
-![cicd](../images/chapter-7/cicd_2.png)
+![cicd](../images/chapter-5/cicd_2.png)
 
 - Select the latest run & job of the required workflow.
 
-![cicd](../images/chapter-7/cicd_3.png)
+![cicd](../images/chapter-5/cicd_3.png)

@@ -165,7 +165,7 @@ def download_model_from_s3(
         str: Path where model is downloaded
     """
     logger = create_logger(project_name="download_model", level="INFO", json_logging=True)
-    model_path = f"{download_folder}/{model_name}"
+    model_path = download_folder
     os.makedirs(model_path, exist_ok=True)
 
     ## If the folder already contains model files return model_path

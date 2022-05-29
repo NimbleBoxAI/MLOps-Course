@@ -94,3 +94,95 @@ On GitHub, navigate to the main page of the repository.
 - Select the latest run & job of the required workflow.
 
 ![cicd](../images/chapter-5/cicd_3.png)
+
+## Building docker image with Github Actions
+
+In the previous chapter (packaging) we have seen how to build the docker image and push that image to ECR. Now let's see how to automate this process using Github Actions.
+
+We need AWS credentials for fetching the model from S3, Pushing the image to ECR. We can't share this information publicly. Fortunately GitHub Actions has a way to store these information securely using `Secrets`.
+
+- Go to the `⚙️ Settings` tab of the repository
+
+-
+
+Save the following secrets:
+
+- **AWS_ACCESS_KEY_ID**
+
+- **AWS_SECRET_ACCESS_KEY**
+
+- **AWS_ACCOUNT_ID** (this is the account id of profile)
+
+These values can be used in GitHub Actions in the following manner:
+
+- AWS_ACCESS_KEY_ID: `{{secrets.AWS_ACCESS_KEY_ID}}`
+
+- AWS_SECRET_ACCESS_KEY: `{{secrets.AWS_SECRET_ACCESS_KEY}}`
+
+- AWS_ACCOUNT_ID: `{{secrets.AWS_ACCOUNT_ID}}`
+
+```yml
+name: Build & Publish Image
+
+on: [push]
+
+jobs:
+  mlops-container:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./chapter-5
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.ref }}
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+    - name: Build image
+      run: |
+        docker build --build-arg AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }} \
+                     --build-arg AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
+                     --build-arg AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+                     --tag mlops-course .
+    - name: Push2ECR
+      id: ecr
+      uses: jwalton/gh-ecr-push@v1
+      with:
+        access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        region: us-east-1
+        image: mlops-course:latest
+```
+
+Let's understand what happening here:
+
+- Jobs will run on `ubuntu-latest` runner
+
+- Clones the code and navigates to `chapter-5` directory
+
+- Sets the AWS environment variables using `aws-actions/configure-aws-credentials@v1` action
+
+- Builds the image and tag it with `mlops-course` tag
+
+- Push the image to ECR using `jwalton/gh-ecr-push@v1` action.
+
+Output will look like:
+
+In actions tab Github:
+
+In the ECR:
+
+## Summary
+
+Let's summarise what we have done so far:
+
+- We have looked into the basics of CICD.
+
+- We have looked into basics of Github Actions.
+
+- We have seen how to automatically create a docker image using GitHub Actions and save it to ECR.

@@ -1,4 +1,4 @@
-transformers==4.16
+transformers==4.30.0
 torch==1.10
 python-json-logger==2.0.2
 pytz
